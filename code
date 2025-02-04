@@ -1,0 +1,60 @@
+# **Utility-Based Course Selection Agent**
+## **Code Implementation**
+
+import random
+class Course:
+    def __init__(self, name, relevance, difficulty, workload, schedule):
+        self.name = name
+        self.relevance = relevance 
+        self.difficulty = difficulty  
+        self.workload = workload  
+        self.schedule = schedule  
+    def __repr__(self):
+        return self.name
+
+class Student:
+    def __init__(self, name, preferences):
+        """
+        preferences: Dictionary with weight values for relevance, difficulty, workload, and schedule feasibility
+        """
+        self.name = name
+        self.preferences = preferences
+        self.selected_courses = []
+
+    def utility_score(self, course, existing_schedule):
+        """Calculate utility score for a given course."""
+        schedule_conflict = any(c.schedule == course.schedule for c in existing_schedule)
+        S = 0 if schedule_conflict else 1
+
+        U = (
+            self.preferences['relevance'] * course.relevance +
+            self.preferences['difficulty'] * (10 - course.difficulty) +  # Prefer easier courses
+            self.preferences['workload'] * (10 - course.workload) +  # Prefer lower workload
+            self.preferences['schedule'] * S
+        )
+        return U
+    def select_courses(self, available_courses, max_courses=3):
+        """Select courses based on utility score."""
+        course_scores = {
+            course: self.utility_score(course, self.selected_courses) for course in available_courses
+        }
+        self.selected_courses = sorted(course_scores, key=course_scores.get, reverse=True)[:max_courses]
+        return self.selected_courses
+courses = [
+    Course("Machine Learning", relevance=9, difficulty=8, workload=7, schedule="Monday 10 AM - 12 PM"),
+    Course("Data Science", relevance=10, difficulty=7, workload=6, schedule="Tuesday 2 PM - 4 PM"),
+    Course("Computer Networks", relevance=7, difficulty=6, workload=5, schedule="Monday 10 AM - 12 PM"),  # Conflict
+    Course("Database Systems", relevance=8, difficulty=5, workload=6, schedule="Thursday 1 PM - 3 PM"),
+    Course("Cybersecurity", relevance=6, difficulty=7, workload=5, schedule="Wednesday 9 AM - 11 AM"),
+]
+preferences = {
+    "relevance": 0.4,
+    "difficulty": 0.3,
+    "workload": 0.2,
+    "schedule": 0.1,
+}
+student = Student("Alice", preferences)
+selected_courses = student.select_courses(courses, max_courses=3)
+print(f"Recommended Courses for {student.name}:")
+for course in selected_courses:
+    print(f"- {course.name} (Schedule: {course.schedule})")
